@@ -6,9 +6,8 @@ const express = require('express');
 const mongo = require("mongodb");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
-const dns = require("dns");
-const cors = require('cors');
 const url = require("url");
+const cors = require('cors');
 const ejs = require("ejs");
 const func = require(__dirname + "/func.js");
 
@@ -52,14 +51,16 @@ app.get('/', function(req, res) {
 app.post("/api/shorturl/new", (req, res) => {
 
 	const newUrl = url.parse(req.body.url).hostname;
+	const fullUrl = req.body.url;
+	const validUrlRe = /^[http://www.]/gi;
+	
 	// Create a hash code for url
 	const urlhashCode = func.hashCode(newUrl);
 
-	// check url is valid or not ?
-	dns.lookup(newUrl, options, (err, addresses) => {
-		if (err) {
-			res.json({ error: "invalid url" });
-		} else {
+  	if (!validUrlRe.test(fullUrl)) {
+    return res.json({ error: 'invalid url' });
+	  }
+	  else {
 			// for not to add the same link to the database
 			Urlshorter.find({ original_url: newUrl }, (err, foundItem) => {
 				if (err) throw err;
@@ -78,7 +79,6 @@ app.post("/api/shorturl/new", (req, res) => {
 			});
 		}
 	});
-});
 // Your first API endpoint
 app.get("/api/shorturl/:hashCode", function(req, res) {
 	const hashCode = req.params.hashCode;
