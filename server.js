@@ -9,6 +9,7 @@ const bodyParser = require("body-parser");
 const url = require("url");
 const cors = require('cors');
 const ejs = require("ejs");
+const dns = require("dns");
 const func = require(__dirname + "/func.js");
 
 
@@ -51,34 +52,36 @@ app.get('/', function(req, res) {
 app.post("/api/shorturl/new", (req, res) => {
 
 	const newUrl = url.parse(req.body.url).hostname;
-	const fullUrl = req.body.url;
-	const validUrlRe = /^[http://www.]/gi;
-	
 	// Create a hash code for url
 	const urlhashCode = func.hashCode(newUrl);
 
-  	if (!validUrlRe.test(fullUrl)) {
-    return res.json({ error: 'invalid url' });
-	  }
+
+	  // check url is valid or not ?
+	dns.lookup(newUrl, options, (err, addresses) => {
+		if (err) {
+			res.json({ error: "invalid url" });
+		}
 	  else {
 			// for not to add the same link to the database
 			Urlshorter.find({ original_url: newUrl }, (err, foundItem) => {
 				if (err) throw err;
 				// if posted url is exist show with res.json
 				if (foundItem.length !== 0) {
-					res.json({ original_url: newUrl, short_url: urlhashCode });
+					res.json({ original_url: "https://" + newUrl, short_url: urlhashCode });
 				}
 				else {
 					const createUrl = new Urlshorter({ original_url: newUrl, short_url: urlhashCode });
 					createUrl.save((err, data) => {
 						if (err) throw err;
 						console.log("Your items saved to your database")
-						res.json({ original_url: newUrl, short_url: urlhashCode });
+						res.json({ original_url: "https://" + newUrl, short_url: urlhashCode });
 					});
 				}
 			});
 		}
 	});
+});
+
 // Your first API endpoint
 app.get("/api/shorturl/:hashCode", function(req, res) {
 	const hashCode = req.params.hashCode;
@@ -87,11 +90,12 @@ app.get("/api/shorturl/:hashCode", function(req, res) {
 		res.redirect("https://" + foundUrl.original_url);
 	});
 });
+
 app.listen(port, function() {
 	console.log(`Listening on port ${port}`);
 });
-
-
 /*
  deneme linki -> https://techcrunch.com/
  */
+
+
