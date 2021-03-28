@@ -15,8 +15,7 @@ const sha1 = require('sha1');
 
 const app = express();
 app.use(cors());
-// dns lookup parameter
-// const options = { all: true };
+
 // Basic Configuration
 const port = process.env.PORT || 3000;
 
@@ -53,9 +52,8 @@ app.post("/api/shorturl/new", (req, res) => {
 
 	const newUrl = url.parse(req.body.url).hostname;
 	const fullUrl = req.body.url;
-	console.log(fullUrl);
 	// Create a hash code for url
-	const urlhashCode = sha1(newUrl);
+	const urlhashCode = sha1(fullUrl);
 
 	// check url is valid or not ?
 	dns.lookup(newUrl, (err, addresses) => {
@@ -86,8 +84,10 @@ app.post("/api/shorturl/new", (req, res) => {
 // Your first API endpoint
 app.get("/api/shorturl/:hashCode", function(req, res) {
 	const hashCode = req.params.hashCode;
+
 	Urlshorter.findOne({ short_url: hashCode }, (err, foundUrl) => {
 		if (err) throw err;
+		console.log("Ben founUrl'im:" + foundUrl);
 		res.redirect(foundUrl.original_url);
 	});
 });
@@ -95,8 +95,5 @@ app.get("/api/shorturl/:hashCode", function(req, res) {
 app.listen(port, function() {
 	console.log(`Listening on port ${port}`);
 });
-/*
- deneme linki -> https://techcrunch.com/
- */
 
 
