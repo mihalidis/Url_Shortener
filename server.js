@@ -15,13 +15,12 @@ const sha1 = require('sha1');
 
 const app = express();
 app.use(cors());
-// dns lookup parameter
-// const options = { all: true };
+
 // Basic Configuration
 const port = process.env.PORT || 3000;
 
 //mongo bağlantı
-mongoose.connect(process.env.MONGO_URI, { useUnifiedTopology: true });
+mongoose.connect(process.env.MONGO_URI, { useUnifiedTopology: true, useNewUrlParser: true });
 
 const connection = mongoose.connection;
 connection.on("error", console.error.bind(console, "connection error:"));
@@ -52,12 +51,11 @@ app.get('/', function(req, res) {
 app.post("/api/shorturl/new", (req, res) => {
 
 	const newUrl = url.parse(req.body.url).hostname;
+	const fullUrl = req.body.url;
 	// Create a hash code for url
-	const urlhashCode = sha1(newUrl);
-	console.log(urlhashCode);
+	const urlhashCode = sha1(fullUrl);
 
-
-	  // check url is valid or not ?
+	// check url is valid or not ?
 	dns.lookup(newUrl, (err, addresses) => {
 		if (err || addresses == null) {
 			res.json({ error: "invalid url" });
@@ -68,14 +66,14 @@ app.post("/api/shorturl/new", (req, res) => {
 				if (err) throw err;
 				// if posted url is exist show with res.json
 				if (foundItem.length !== 0) {
-					res.json({ original_url: "https://" + newUrl, short_url: urlhashCode });
+					res.json({ original_url: fullUrl, short_url: urlhashCode });
 				}
 				else {
-					const createUrl = new Urlshorter({ original_url: newUrl, short_url: urlhashCode });
+					const createUrl = new Urlshorter({ original_url: fullUrl, short_url: urlhashCode });
 					createUrl.save((err, data) => {
 						if (err) throw err;
 						console.log("Your items saved to your database")
-						res.json({ original_url: "https://" + newUrl, short_url: urlhashCode });
+						res.json({ original_url: fullUrl, short_url: urlhashCode });
 					});
 				}
 			});
@@ -86,17 +84,16 @@ app.post("/api/shorturl/new", (req, res) => {
 // Your first API endpoint
 app.get("/api/shorturl/:hashCode", function(req, res) {
 	const hashCode = req.params.hashCode;
+
 	Urlshorter.findOne({ short_url: hashCode }, (err, foundUrl) => {
 		if (err) throw err;
-		res.redirect("https://" + foundUrl.original_url);
+		console.log("Ben founUrl'im:" + foundUrl);
+		res.redirect(foundUrl.original_url);
 	});
 });
 
 app.listen(port, function() {
 	console.log(`Listening on port ${port}`);
 });
-/*
- deneme linki -> https://techcrunch.com/
- */
 
 
