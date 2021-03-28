@@ -10,7 +10,6 @@ const url = require("url");
 const cors = require('cors');
 const ejs = require("ejs");
 const dns = require("dns");
-const func = require(__dirname + "/func.js");
 
 
 const app = express();
@@ -52,8 +51,9 @@ app.get('/', function(req, res) {
 app.post("/api/shorturl/new", (req, res) => {
 
 	const newUrl = url.parse(req.body.url).hostname;
+	console.log(newUrl);
 	// Create a hash code for url
-	const urlhashCode = func.hashCode(newUrl);
+	const urlhashCode = 4
 
 
 	  // check url is valid or not ?
@@ -61,7 +61,7 @@ app.post("/api/shorturl/new", (req, res) => {
 		if (err) {
 			res.json({ error: "invalid url" });
 		}
-	  else {
+	  	else {
 			// for not to add the same link to the database
 			Urlshorter.find({ original_url: newUrl }, (err, foundItem) => {
 				if (err) throw err;
