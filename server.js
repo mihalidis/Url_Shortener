@@ -10,12 +10,13 @@ const url = require("url");
 const cors = require('cors');
 const ejs = require("ejs");
 const dns = require("dns");
+const sha1 = require('sha1');
 
 
 const app = express();
 app.use(cors());
 // dns lookup parameter
-const options = { all: true };
+// const options = { all: true };
 // Basic Configuration
 const port = process.env.PORT || 3000;
 
@@ -31,7 +32,7 @@ connection.once("open", () => {
 //schema
 const UrlSchema = new mongoose.Schema({
 	original_url: String,
-	short_url: Number
+	short_url: String
 });
 
 //model url için
@@ -51,14 +52,14 @@ app.get('/', function(req, res) {
 app.post("/api/shorturl/new", (req, res) => {
 
 	const newUrl = url.parse(req.body.url).hostname;
-	console.log(newUrl);
 	// Create a hash code for url
-	const urlhashCode = 4
+	const urlhashCode = sha1(newUrl);
+	console.log(urlhashCode);
 
 
 	  // check url is valid or not ?
-	dns.lookup(newUrl, options, (err, addresses) => {
-		if (err) {
+	dns.lookup(newUrl, (err, addresses) => {
+		if (err || addresses == null) {
 			res.json({ error: "invalid url" });
 		}
 	  	else {
